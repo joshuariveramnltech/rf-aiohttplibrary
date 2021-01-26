@@ -71,6 +71,7 @@ class AioHTTPLibrary(HybridCore):
             except Exception as err:
                 errors.append(str(err))
             iter+=hop
+        errors = list(filter('', errors)) 
         if errors is not None:
             raise Exception('\n'.join(errors))
 
