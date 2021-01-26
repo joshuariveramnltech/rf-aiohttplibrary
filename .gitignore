@@ -3,3 +3,7 @@ venv
 build
 dist
 demo/results
+*.egg-info
+__pycache__
+build
+dist
