@@ -61,12 +61,18 @@ class AioHTTPLibrary(HybridCore):
         urls = urls.readlines()
         count = len(urls)
         iter = 0
+        errors = []
         hop = slice
         while (iter<=count):
             range = (iter+hop) if ((iter+hop) < count) else count
-            logger.console(f"Range {iter}-{range}")
-            asyncio.run(self.main(urls[iter:range]))
+            logger.console(f"\nInitiating Requests Queue Range {iter}-{range}")
+            try:
+                asyncio.run(self.main(urls[iter:range]))
+            except Exception as err:
+                errors.append(str(err))
             iter+=hop
+        if errors is not None:
+            raise Exception('\n'.join(errors))
 
     async def get(
         self,
@@ -79,10 +85,11 @@ class AioHTTPLibrary(HybridCore):
         url = url.replace('\n', '')
         try:
             resp = await session.get(url)
-        except Exception:
-            resp = await session.get(url)
-        logger.console(str(resp.status) + str(url))
-        return str(iter) + ' ' + str(resp.status) + f"- {url}"
+        except Exception as err:
+            return logger.console(str(err) + ' ' + str(resp.status) + str(url))
+        if str(resp.status) != '200':
+            logger.console(str(resp.status) + ' ' + str(url))
+            return str(resp.status) + ' ' + str(url)
 
     async def gather_with_concurrency(self, n, *tasks):
         semaphore = asyncio.Semaphore(n)
@@ -104,7 +111,11 @@ class AioHTTPLibrary(HybridCore):
             # asyncio.gather() will wait on the entire task set to be
             # completed.  If you want to process results greedily as they come in,
             # loop over asyncio.as_completed()
-            await self.gather_with_concurrency(100, *tasks)
+            logs = await self.gather_with_concurrency(100, *tasks)
+            res = list(filter(None, logs)) 
+            if res is not None:
+                raise Exception('\n'.join(res))
+            # logger.console('\n'.join(logs))
             # for calls in asyncio.as_completed(tasks):
             #     result = await calls
             #     print(result)

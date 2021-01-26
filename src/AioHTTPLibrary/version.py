@@ -22,4 +22,4 @@
 # Created by    : Joshua Kim Rivera
 # Date          : January 26 2021 15:09 UTC-8
 
-VERSION = '1.0a1'
+VERSION = '1.0a2'
