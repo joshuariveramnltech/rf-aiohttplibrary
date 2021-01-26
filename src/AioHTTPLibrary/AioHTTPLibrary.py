@@ -69,10 +69,11 @@ class AioHTTPLibrary(HybridCore):
             try:
                 asyncio.run(self.main(urls[iter:range]))
             except Exception as err:
+
                 errors.append(str(err))
             iter+=hop
-        errors = list(filter('', errors)) 
-        if errors is not None:
+        errors = list(filter(None, errors))
+        if errors != []:
             raise Exception('\n'.join(errors))
 
     async def get(
