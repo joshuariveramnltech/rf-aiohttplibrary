@@ -85,6 +85,7 @@ class AioHTTPLibrary(HybridCore):
         ) -> dict:
         print(f"Requesting {url}")
         url = url.replace('\n', '')
+        resp = ''
         try:
             resp = await session.get(url)
         except Exception as err:
