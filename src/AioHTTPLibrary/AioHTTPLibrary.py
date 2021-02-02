@@ -74,13 +74,16 @@ class AioHTTPLibrary(HybridCore):
         return_obj = {}
         data = {}
         for task in task_returns:
-            data['status_code'] = task.status
+            # logger.console(str(task))
             try:
                 data['json'] = await task.json()
             except Exception as e:
                 data['json'] = str(e)
+            data['status_code'] = task.status
             return_obj[str(task.url)] = data
-            task.close()
+            data = {}
+            # task.close()
+        logger.console(return_obj)
         return dict(return_obj)
 
     @keyword
