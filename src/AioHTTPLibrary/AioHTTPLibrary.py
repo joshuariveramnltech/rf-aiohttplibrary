@@ -65,9 +65,7 @@ class AioHTTPLibrary(HybridCore):
             response = asyncio.run(self.main(urls))
         except Exception as e:
             fail(str(e))
-        # logger.console(response)
         data = asyncio.run(self._process_response_to_dict(response))
-        # logger.console(data)
         return data
 
     async def _process_response_to_dict(self, task_returns):
@@ -75,11 +73,7 @@ class AioHTTPLibrary(HybridCore):
         """
         return_obj = {}
         data = {}
-        # logger.console(task_returns)
         for task in task_returns:
-            logger.console(type(task))
-            # response = await task.json()
-            # logger.console(type(task))
             data['status_code'] = task.status
             try:
                 data['json'] = await task.json()
@@ -107,9 +101,9 @@ class AioHTTPLibrary(HybridCore):
             try:
                 results = asyncio.run(self.main(urls[iter:range], isImage=True))
                 for result in results:
-                    if (isinstance(result, Exception)):
-                        logger.console(result)
-                        errors.append(result)
+                    if result.status != 200:
+                        logger.console(f"Got {result.status} on {result.url}")
+                        errors.append(f"Got {result.status} on {result.url}")
             except Exception as e:
                 raise Exception(str(e))
             iter+=hop
@@ -136,11 +130,6 @@ class AioHTTPLibrary(HybridCore):
                 await resp.json()
         except Exception as err:
             pass
-            # raise Exception(str(err) + str(resp.status) + str(url))
-        if str(resp.status) != '200':
-            raise Exception(str(resp.status) + ' ' + str(url))
-        # else:
-        #     await resp.json()
         return resp
 
     async def gather_with_concurrency(self, n, *tasks):
