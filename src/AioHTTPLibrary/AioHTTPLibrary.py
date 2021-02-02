@@ -26,6 +26,7 @@ import asyncio
 import aiohttp
 import logging
 from robot.api import logger
+from robot.utils.asserts import fail
 from AioHTTPLibrary.version import VERSION
 
 from robotlibcore import (HybridCore,
@@ -52,6 +53,40 @@ class AioHTTPLibrary(HybridCore):
         HybridCore.__init__(self, libraries)
 
     @keyword
+    def async_get_request(self, urls=[]):
+        """
+        Performs async calls, then waits for all the responses.
+        Returns a dictionary with the url as key containing the response object.
+
+        urls must be a list variable.
+        """
+        errors = []
+        try:
+            response = asyncio.run(self.main(urls))
+        except Exception as e:
+            fail(str(e))
+        # logger.console(response)
+        data = asyncio.run(self._process_response_to_dict(response))
+        # logger.console(data)
+        return data
+
+    async def _process_response_to_dict(self, task_returns):
+        """
+        """
+        return_obj = {}
+        data = {}
+        # logger.console(task_returns)
+        for task in task_returns:
+            logger.console(task)
+            data['status_code'] = task.status
+            try:
+                data['json'] = await task.json()
+            except Exception as e:
+                data['json'] = str(e)
+            return_obj[str(task.url)] = data
+        return dict(return_obj)
+
+    @keyword
     def http_test_urls(self, file, slice=5):
         """
         filename: absolute file path to the file containing the urls.
@@ -60,21 +95,23 @@ class AioHTTPLibrary(HybridCore):
         urls = open(file, "r")
         urls = urls.readlines()
         count = len(urls)
-        iter = 0
         errors = []
+        iter = 0
         hop = slice
         while (iter<=count):
             range = (iter+hop) if ((iter+hop) < count) else count
             logger.console(f"\nInitiating Requests Queue Range {iter}-{range}")
             try:
-                asyncio.run(self.main(urls[iter:range]))
-            except Exception as err:
-
-                errors.append(str(err))
+                results = asyncio.run(self.main(urls[iter:range]))
+                for result in results:
+                    if (isinstance(result, Exception)):
+                        logger.console(result)
+                        errors.append(result)
+            except Exception as e:
+                raise Exception(str(e))
             iter+=hop
-        errors = list(filter(None, errors))
         if errors != []:
-            raise Exception('\n'.join(errors))
+            raise Exception('\n'.join(map(str, errors)))
 
     async def get(
         self,
@@ -83,30 +120,31 @@ class AioHTTPLibrary(HybridCore):
         iter,
         **kwargs
         ) -> dict:
-        print(f"Requesting {url}")
+        """
+        Asynchronous get method.
+        """
+        logger.info(f"Requesting {url}")
         url = url.replace('\n', '')
-        resp = ''
+        resp = None
         try:
-            resp = await session.get(url)
+            resp = await session.request('GET', url=url, **kwargs)
         except Exception as err:
-            return logger.console(str(err) + ' ' + str(resp.status) + str(url))
+            raise Exception(str(err) + str(resp.status) + str(url))
         if str(resp.status) != '200':
-            logger.console(str(resp.status) + ' ' + str(url))
-            return str(resp.status) + ' ' + str(url)
+            raise Exception(str(resp.status) + ' ' + str(url))
+        return resp
 
     async def gather_with_concurrency(self, n, *tasks):
         semaphore = asyncio.Semaphore(n)
-
         async def sem_task(task):
             async with semaphore:
                 return await task
         return await asyncio.gather(*(sem_task(task) for task in tasks))
 
     async def main(self, urls, **kwargs):
-        # Asynchronous context manager.  Prefer this rather
-        # than using a different session for each GET request
         async with aiohttp.ClientSession() as session:
             tasks = []
+            errors = []
             iter = 0
             for url in urls:
                 iter+=1
@@ -114,36 +152,8 @@ class AioHTTPLibrary(HybridCore):
             # asyncio.gather() will wait on the entire task set to be
             # completed.  If you want to process results greedily as they come in,
             # loop over asyncio.as_completed()
-            logs = await self.gather_with_concurrency(100, *tasks)
-            res = list(filter(None, logs)) 
-            if res is not None:
-                raise Exception('\n'.join(res))
-            # logger.console('\n'.join(logs))
-            # for calls in asyncio.as_completed(tasks):
-            #     result = await calls
-            #     print(result)
-            # results = await asyncio.gather(*tasks, return_exceptions=True)
-            # results = asyncio.as_completed(*tasks)
-            # file = open('results.txt', 'w+')
-            # for result in results:
-            #     print(result)
-            #     file.write(f"{result}\n")
-            # file.close()
-        # return htmls
-
-
-# if __name__ == '__main__':
-#     urls = open("urls.txt", "r")
-#     urls = urls.readlines()
-#     print(urls)
-#     # base_url = 'https://pwa.br88uat.com/{url}'
-#     # Either take colors from stdin or make some default here
-#     count = len(urls)
-#     print(count)
-#     iter = 0
-#     hop = 20
-#     while (iter<=count):
-#         range = (iter+hop) if ((iter+hop) < count) else count
-#         print(f"Range {iter}-{range}")
-#         asyncio.run(main(urls[iter:range]))
-#         iter+=hop
+            try:
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+            except Exception as e:
+                logger.console(str(e))
+            return results

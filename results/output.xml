@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 3.2.2 (Python 3.9.1 on darwin)" generated="20210202 15:28:11.251" rpa="false">
+<suite id="s1" name="Demo" source="/Users/joshuarivera/Josh/Personal/robot_aiohttp/demo/demo.robot">
+<test id="s1-t1" name="Sample Test">
+<kw name="Http Test Urls" library="AioHTTPLibrary">
+<doc>filename: absolute file path to the file containing the urls.
+slice: whatever</doc>
+<arguments>
+<arg>${EXECDIR}/urls.txt</arg>
+<arg>100</arg>
+</arguments>
+<msg timestamp="20210202 15:28:11.412" level="FAIL">FileNotFoundError: [Errno 2] No such file or directory: '/Users/joshuarivera/Josh/Personal/robot_aiohttp/urls.txt'</msg>
+<status status="FAIL" starttime="20210202 15:28:11.412" endtime="20210202 15:28:11.412"></status>
+</kw>
+<status status="FAIL" starttime="20210202 15:28:11.411" endtime="20210202 15:28:11.412" critical="yes">FileNotFoundError: [Errno 2] No such file or directory: '/Users/joshuarivera/Josh/Personal/robot_aiohttp/urls.txt'</status>
+</test>
+<status status="FAIL" starttime="20210202 15:28:11.251" endtime="20210202 15:28:11.412"></status>
+</suite>
+<statistics>
+<total>
+<stat pass="0" fail="1">Critical Tests</stat>
+<stat pass="0" fail="1">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat pass="0" fail="1" id="s1" name="Demo">Demo</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>

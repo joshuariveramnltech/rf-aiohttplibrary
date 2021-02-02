@@ -7,4 +7,5 @@ demo/results
 __pycache__
 build
 dist
+*.txt
 .DS_Store
