@@ -77,17 +77,20 @@ class AioHTTPLibrary(HybridCore):
         data = {}
         # logger.console(task_returns)
         for task in task_returns:
-            logger.console(task)
+            logger.console(type(task))
+            # response = await task.json()
+            # logger.console(type(task))
             data['status_code'] = task.status
             try:
                 data['json'] = await task.json()
             except Exception as e:
                 data['json'] = str(e)
             return_obj[str(task.url)] = data
+            task.close()
         return dict(return_obj)
 
     @keyword
-    def http_test_urls(self, file, slice=5):
+    def http_test_image_urls(self, file, slice=5):
         """
         filename: absolute file path to the file containing the urls.
         slice: whatever
@@ -102,7 +105,7 @@ class AioHTTPLibrary(HybridCore):
             range = (iter+hop) if ((iter+hop) < count) else count
             logger.console(f"\nInitiating Requests Queue Range {iter}-{range}")
             try:
-                results = asyncio.run(self.main(urls[iter:range]))
+                results = asyncio.run(self.main(urls[iter:range], isImage=True))
                 for result in results:
                     if (isinstance(result, Exception)):
                         logger.console(result)
@@ -118,6 +121,7 @@ class AioHTTPLibrary(HybridCore):
         session: aiohttp.ClientSession,
         url: str,
         iter,
+        isImage=False,
         **kwargs
         ) -> dict:
         """
@@ -128,10 +132,15 @@ class AioHTTPLibrary(HybridCore):
         resp = None
         try:
             resp = await session.request('GET', url=url, **kwargs)
+            if not isImage:
+                await resp.json()
         except Exception as err:
-            raise Exception(str(err) + str(resp.status) + str(url))
+            pass
+            # raise Exception(str(err) + str(resp.status) + str(url))
         if str(resp.status) != '200':
             raise Exception(str(resp.status) + ' ' + str(url))
+        # else:
+        #     await resp.json()
         return resp
 
     async def gather_with_concurrency(self, n, *tasks):
@@ -141,14 +150,14 @@ class AioHTTPLibrary(HybridCore):
                 return await task
         return await asyncio.gather(*(sem_task(task) for task in tasks))
 
-    async def main(self, urls, **kwargs):
+    async def main(self, urls, isImage=False, **kwargs):
         async with aiohttp.ClientSession() as session:
             tasks = []
             errors = []
             iter = 0
             for url in urls:
                 iter+=1
-                tasks.append(self.get(session=session, url=url, iter=iter, **kwargs))
+                tasks.append(self.get(session=session, url=url, iter=iter, isImage=isImage, **kwargs))
             # asyncio.gather() will wait on the entire task set to be
             # completed.  If you want to process results greedily as they come in,
             # loop over asyncio.as_completed()
