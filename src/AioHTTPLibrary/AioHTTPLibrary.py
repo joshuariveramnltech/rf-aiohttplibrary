@@ -83,7 +83,7 @@ class AioHTTPLibrary(HybridCore):
             return_obj[str(task.url)] = data
             data = {}
             # task.close()
-        logger.console(return_obj)
+        # logger.console(return_obj)
         return dict(return_obj)
 
     @keyword
