@@ -19,7 +19,7 @@ Test Object Response
 
 
 *** Variable ***
-${test}                             https://m.w88uatv2.com/_secure/ajax/api/apivx/grid-system/AUD/android/grid_world.json?_=
-@{test_urls}                        https://m.w88uatv2.com/_secure/ajax/api/apivx/grid-system/AUD/android/grid_world.json?_=
-...                                 https://m.w88uatv2.com/_secure/ajax/api/apivx/grid-system/USD/android/grid_world.json?_=
-...                                 https://m.w88uatv2.com/_secure/ajax/api/apivx/grid-system/RMB/android/xgrid_world.json?_=
+${test}                             https://m.test.url.com/path
+@{test_urls}                        https://m.test.url.com/api/route
+...                                 https://m.test.url.com/api/route
+...                                 https://m.test.url.com/api/route
